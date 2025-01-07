@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Progress Tracker</title>
   <style>
+    /* Same CSS as before */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -91,13 +92,18 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Initial Data
-    const data = {
+    // Load data from localStorage or initialize
+    const data = JSON.parse(localStorage.getItem("trackerData")) || {
       dates: ["6th Jan"],
       knowledge: [0],
       finance: [4090], // Starting finance
       history: []
     };
+
+    // Save data to localStorage
+    function saveData() {
+      localStorage.setItem("trackerData", JSON.stringify(data));
+    }
 
     // Chart Initialization
     let chart;
@@ -142,6 +148,9 @@
           responsive: true
         }
       });
+
+      // Populate the history list
+      updateHistoryList();
     }
 
     // Update Data
@@ -178,6 +187,9 @@
         updateHistoryList();
       }
 
+      // Save data to localStorage
+      saveData();
+
       // Refresh Chart
       chart.update();
 
@@ -203,3 +215,4 @@
   </script>
 </body>
 </html>
+
