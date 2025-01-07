@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Progress Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    h1 {
+      text-align: center;
+    }
+    canvas {
+      margin: 20px 0;
+      width: 100%;
+      height: 400px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, textarea {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .history {
+      margin-top: 20px;
+    }
+    .history ul {
+      list-style: none;
+      padding: 0;
+    }
+    .history li {
+      padding: 8px;
+      background: #f9f9f9;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Daily Progress Tracker</h1>
+    <canvas id="progressGraph"></canvas>
+    <div class="input-group">
+      <label for="knowledge">Knowledge (Pages Read):</label>
+      <input type="number" id="knowledge" placeholder="Enter pages read today">
+      
+      <label for="finance">Finance (THB, +/-):</label>
+      <input type="number" id="finance" placeholder="Enter financial change">
+      
+      <label for="reason">Reason for Financial Change:</label>
+      <textarea id="reason" rows="2" placeholder="Enter reason (e.g., Taxi Fee -200 THB)"></textarea>
+      
+      <button onclick="updateGraph()">Update</button>
+    </div>
+    <div class="history">
+      <h2>Financial History</h2>
+      <ul id="financeHistory"></ul>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Initial Data
+    const data = {
+      dates: ["6th Jan"],
+      knowledge: [0],
+      finance: [4090], // Starting finance
+      history: []
+    };
+
+    // Chart Initialization
+    let chart;
+    function initializeChart() {
+      const ctx = document.getElementById("progressGraph").getContext("2d");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: data.dates,
+          datasets: [
+            {
+              label: "Knowledge",
+              data: data.knowledge,
+              borderColor: "blue",
+              backgroundColor: "rgba(0, 0, 255, 0.1)",
+              fill: true
+            },
+            {
+              label: "Finance",
+              data: data.finance,
+              borderColor: "green",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true
+            }
+          ]
+        },
+        options: {
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Date"
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Value"
+              }
+            }
+          },
+          responsive: true
+        }
+      });
+    }
+
+    // Update Data
+    function updateGraph() {
+      const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      const knowledgeInput = parseInt(document.getElementById("knowledge").value) || 0;
+      const financeInput = parseInt(document.getElementById("finance").value) || 0;
+      const reason = document.getElementById("reason").value.trim();
+
+      // Add New Date
+      if (!data.dates.includes(today)) {
+        data.dates.push(today);
+
+        // Apply decay if knowledge was 0 on the previous day
+        const lastKnowledge = data.knowledge[data.knowledge.length - 1];
+        data.knowledge.push(lastKnowledge > 0 ? lastKnowledge - 1 : 0);
+        const lastFinance = data.finance[data.finance.length - 1];
+        data.finance.push(lastFinance); // Keep finance stable if no data
+      }
+
+      // Update Knowledge
+      const lastKnowledge = data.knowledge[data.knowledge.length - 1];
+      data.knowledge[data.knowledge.length - 1] = lastKnowledge + knowledgeInput;
+
+      // Update Finance
+      const lastFinance = data.finance[data.finance.length - 1];
+      const newFinance = lastFinance + financeInput;
+      data.finance[data.finance.length - 1] = newFinance;
+
+      // Update History
+      if (reason || financeInput !== 0) {
+        const historyEntry = `${today}: ${reason || "No reason provided"} (${financeInput > 0 ? "+" : ""}${financeInput} THB)`;
+        data.history.push(historyEntry);
+        updateHistoryList();
+      }
+
+      // Refresh Chart
+      chart.update();
+
+      // Clear Inputs
+      document.getElementById("knowledge").value = "";
+      document.getElementById("finance").value = "";
+      document.getElementById("reason").value = "";
+    }
+
+    // Update History List
+    function updateHistoryList() {
+      const historyList = document.getElementById("financeHistory");
+      historyList.innerHTML = "";
+      data.history.forEach(entry => {
+        const li = document.createElement("li");
+        li.textContent = entry;
+        historyList.appendChild(li);
+      });
+    }
+
+    // Initialize Chart on Page Load
+    window.onload = initializeChart;
+  </script>
+</body>
+</html>
